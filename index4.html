@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTTS Data Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* === RESET & BASE === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* === FIXED L&T MOTION BACKGROUND === */
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        body {
+            min-height: 100vh;
+            position: relative;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* MAIN GRADIENT BACKGROUND */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 100%);
+            z-index: -2;
+        }
+        
+        /* L&T LOGO ANIMATION LAYER - FIXED POSITION */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("./public/L&T.png");
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            background-position: 0 0;
+            opacity: 0.08;
+            z-index: -1;
+            animation: scrollPattern 90s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scrollPattern {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 800px 800px;
+            }
+        }
+        
+        /* === MAIN CONTAINER === */
+        .container {
+            max-width: 3000px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* === HEADER === */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 0.8s ease-out;
+            text-align: center;
+        }
+        
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            max-height: 80px;
+        }
+        
+        .header-text {
+            text-align: left;
+        }
+        
+        .header h1 {
+            color: #1e3a8a;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .project-name {
+            color: #4b5563;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .header p {
+            color: #4b5563;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        /* Connection Status Styles */
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-connected {
+            background-color: #10b981;
+            color: #065f46;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .status-disconnected {
+            background-color: #ef4444;
+            color: #7f1d1d;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* === CONTROLS === */
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 1s ease-out 0.2s both;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-group h3 {
+            color: #374151;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .control-group h3 i.fa-chevron-down,
+        .control-group h3 i.fa-chevron-up {
+            margin-left: auto;
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4338ca, #312e81);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #0da271, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* === TOGGLE SWITCH === */
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        
+        .toggle-label {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        /* === SEARCH & FILTER === */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid rgba(229, 231, 235, 0.5);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            background: white;
+        }
+        
+        /* === COLUMN FILTERS === */
+        .column-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(249, 250, 251, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-label {
+            font-size: 13px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid rgba(209, 213, 219, 0.8);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* === FILE INPUT === */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        /* === DATASETS LIST === */
+        .datasets-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 1s ease-out 0.4s both;
+        }
+        
+        .datasets-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .dataset-tag {
+            background: rgba(79, 70, 229, 0.1);
+            padding: 8px 15px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #4f46e5;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .dataset-tag button {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dataset-tag button:hover {
+            color: #dc2626;
+        }
+        
+        /* === STATS === */
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+        
+        .stat-card h4 {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+        
+        /* === TABLE === */
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow-x: auto;
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .table-header h2 {
+            color: #1e3a8a;
+            font-size: 24px;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        /* === TABLE STYLES === */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white;
+            text-align: left;
+            padding: 15px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th:hover {
+            background: linear-gradient(135deg, #4338ca, #312e81);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            vertical-align: top;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        tr:hover td {
+            background: rgba(243, 244, 246, 0.9);
+        }
+        
+        .actions-cell {
+            width: 140px;
+            text-align: center;
+            position: sticky;
+            left: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 5;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .delete-btn {
+            color: #ef4444;
+        }
+        
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .edit-btn {
+            color: #3b82f6;
+        }
+        
+        .edit-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .save-btn {
+            color: #10b981;
+        }
+        
+        .save-btn:hover {
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .cancel-btn {
+            color: #6b7280;
+        }
+        
+        .cancel-btn:hover {
+            background: rgba(107, 114, 128, 0.1);
+        }
+        
+        .edit-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid rgba(209, 213, 219, 0.8);
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .edit-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+        
+        .null-value {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        /* === LOADING INDICATOR === */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(79, 70, 229, 0.3);
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* === EMPTY STATE === */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            color: #374151;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .empty-state p {
+            color: #6b7280;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* === ALERT === */
+        .alert {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.95);
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.95);
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.95);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.95);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header, .controls, .table-container, .datasets-section {
+                padding: 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            th, td {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+        
+        /* === SCROLLBAR STYLING === */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.5);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.7);
+        }
+        
+        /* === VIEW OPTIONS === */
+        .view-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            background: rgba(249, 250, 251, 0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        
+        .view-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #4b5563;
+            cursor: pointer;
+        }
+        
+        .view-options input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .row-count {
+            font-size: 14px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+        
+        /* === EDIT MODE SWITCH === */
+        .edit-mode-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .edit-mode-label {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .edit-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .edit-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .edit-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .edit-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        .edit-toggle input:checked + .edit-slider {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .edit-toggle input:checked + .edit-slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* === COLLAPSIBLE CONTENT === */
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            max-height: 1000px;
+        }
+        
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <img src="./public/LTTS.png" alt="L&T Logo" class="logo">
+                <div class="header-text">
+                    <h1>LTTS Data Dashboard</h1>
+                    <div class="project-name">Project Name</div>
+                </div>
+            </div>
+            <p>Advanced data management with column search and real-time editing</p>
+            <div id="connectionStatus" class="connection-status status-disconnected">
+                <span class="status-dot"></span>
+                <span>Disconnected from server</span>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats" id="statsSection" style="display: none;">
+            <div class="stat-card">
+                <h4>Total Rows</h4>
+                <div class="value" id="totalRows">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Total Columns</h4>
+                <div class="value" id="totalColumns">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Datasets</h4>
+                <div class="value" id="totalDatasets">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Filtered Rows</h4>
+                <div class="value" id="filteredRows">0</div>
+            </div>
+        </div>
+        
+        <!-- Datasets List -->
+        <div class="datasets-section" id="datasetsSection" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3><i class="fas fa-layer-group"></i> Loaded Datasets</h3>
+                <button class="btn btn-danger" id="deleteAllBtn" style="display: none;">
+                    <i class="fas fa-trash-alt"></i> Delete All Datasets
+                </button>
+            </div>
+            <div class="datasets-list" id="datasetsList"></div>
+        </div>
+        
+        <!-- Main Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <h3><i class="fas fa-folder-open"></i> Data Management</h3>
+                <div class="buttons">
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Upload Dataset
+                        </button>
+                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple>
+                    </div>
+                    <button class="btn btn-success" id="exportBtn">
+                        <i class="fas fa-download"></i> Export Combined Data
+                    </button>
+                    <button class="btn btn-info" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search and Filter (Collapsible) -->
+            <div class="control-group" id="searchFilterGroup">
+                <h3 onclick="toggleSearchFilter()">
+                    <i class="fas fa-search"></i> Search & Filter
+                    <i class="fas fa-chevron-up" id="searchFilterIcon"></i>
+                </h3>
+
+                <div class="collapsible-content collapsed" id="searchFilterContent">
+                    <!-- Fuzzy Search Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="toggle-switch">
+                            <span class="toggle-label">Fuzzy Search</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="fuzzyToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Global Search -->
+                    <div class="search-container">
+                        <input type="text" id="globalSearchInput" class="search-input" 
+                               placeholder="Search across all columns...">
+                    </div>
+                    
+                    <!-- Column Filters -->
+                    <div id="columnFilters" class="column-filters" style="display: none;">
+                        <!-- Filters will be dynamically added here -->
+                    </div>
+                    
+                    <!-- Filter Control Buttons -->
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-success" id="applyFiltersBtn">
+                            <i class="fas fa-filter"></i> Apply All Filters
+                        </button>
+                        <button class="btn btn-danger" id="clearFiltersBtn" style="display: none;">
+                            <i class="fas fa-filter-circle-xmark"></i> Clear All Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3><i class="fas fa-edit"></i> Edit Options</h3>
+                <div class="edit-mode-switch">
+                    <span class="edit-mode-label">Enable Edit Mode</span>
+                    <label class="edit-toggle">
+                        <input type="checkbox" id="editModeToggle">
+                        <span class="edit-slider"></span>
+                    </label>
+                </div>
+                <div class="buttons" style="margin-top: 10px; display: none;" id="editModeButtons">
+                    <button class="btn btn-success" id="saveEditBtn">
+                        <i class="fas fa-save"></i> Save All Changes
+                    </button>
+                    <button class="btn btn-danger" id="cancelEditBtn">
+                        <i class="fas fa-times"></i> Cancel Edit
+                    </button>
+                </div>
+            </div>
+            
+            <!-- View Options -->
+            <div class="control-group">
+                <h3><i class="fas fa-eye"></i> View Options</h3>
+                <div class="view-options">
+                    <label>
+                        <input type="radio" name="viewMode" value="all" checked> Show All Data (No Pagination)
+                    </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="paged"> Enable Pagination
+                    </label>
+                    <div class="row-count" id="rowCount">Showing 0 rows</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <div class="table-header">
+                <h2 id="tableTitle">Combined Database</h2>
+                <div class="table-actions">
+                    <div id="searchInfo" style="display: none;">
+                        <span id="searchResultsCount">0</span> results found
+                    </div>
+                    <div class="pagination" id="paginationControls" style="display: none;">
+                        <button class="btn btn-sm" id="prevPageBtn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span id="pageInfo">Page 1 of 1</span>
+                        <button class="btn btn-sm" id="nextPageBtn" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <select id="pageSizeSelect" class="filter-input">
+                            <option value="10">10 rows</option>
+                            <option value="25" selected>25 rows</option>
+                            <option value="50">50 rows</option>
+                            <option value="100">100 rows</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="tableWrapper"></div>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-database"></i>
+            <h3>Welcome to LTTS Data Dashboard</h3>
+            <p>Connect to the server and upload your first dataset to get started</p>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-primary" id="startConnectionBtn">
+                    <i class="fas fa-plug"></i> Connect to Server
+                </button>
+                <div style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+                    <p>Make sure your Flask server is running on http://localhost:5000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+
+    <script>
+        // Global State
+        let state = {
+            combinedData: [],
+            datasets: [],
+            filteredData: [],
+            displayedData: [],
+            searchResults: [],
+            editMode: false,
+            editingRow: null,
+            filters: {},
+            sortColumn: null,
+            sortDirection: 'asc',
+            currentPage: 1,
+            pageSize: 25,
+            totalPages: 1,
+            fuzzySearch: true,
+            isLoading: false,
+            serverAvailable: false,
+            viewMode: 'all', // 'all' or 'paged'
+            columnFilters: {}, // Stores column filter values (only applied when button is clicked)
+            searchFilterCollapsed: false
+        };
+
+        // DOM Elements
+        const elements = {
+            connectionStatus: document.getElementById('connectionStatus'),
+            startConnectionBtn: document.getElementById('startConnectionBtn'),
+            fileInput: document.getElementById('fileInput'),
+            uploadBtn: document.getElementById('uploadBtn'),
+            exportBtn: document.getElementById('exportBtn'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            globalSearchInput: document.getElementById('globalSearchInput'),
+            applyFiltersBtn: document.getElementById('applyFiltersBtn'),
+            clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+            fuzzyToggle: document.getElementById('fuzzyToggle'),
+            columnFilters: document.getElementById('columnFilters'),
+            editModeToggle: document.getElementById('editModeToggle'),
+            editModeButtons: document.getElementById('editModeButtons'),
+            saveEditBtn: document.getElementById('saveEditBtn'),
+            cancelEditBtn: document.getElementById('cancelEditBtn'),
+            deleteAllBtn: document.getElementById('deleteAllBtn'),
+            tableContainer: document.getElementById('tableContainer'),
+            emptyState: document.getElementById('emptyState'),
+            tableWrapper: document.getElementById('tableWrapper'),
+            tableTitle: document.getElementById('tableTitle'),
+            searchInfo: document.getElementById('searchInfo'),
+            searchResultsCount: document.getElementById('searchResultsCount'),
+            datasetsSection: document.getElementById('datasetsSection'),
+            datasetsList: document.getElementById('datasetsList'),
+            statsSection: document.getElementById('statsSection'),
+            totalRows: document.getElementById('totalRows'),
+            totalColumns: document.getElementById('totalColumns'),
+            totalDatasets: document.getElementById('totalDatasets'),
+            filteredRows: document.getElementById('filteredRows'),
+            alertContainer: document.getElementById('alertContainer'),
+            prevPageBtn: document.getElementById('prevPageBtn'),
+            nextPageBtn: document.getElementById('nextPageBtn'),
+            pageInfo: document.getElementById('pageInfo'),
+            pageSizeSelect: document.getElementById('pageSizeSelect'),
+            paginationControls: document.getElementById('paginationControls'),
+            rowCount: document.getElementById('rowCount'),
+            searchFilterGroup: document.getElementById('searchFilterGroup'),
+            searchFilterContent: document.getElementById('searchFilterContent'),
+            searchFilterIcon: document.getElementById('searchFilterIcon')
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            // Try to auto-connect on load
+            setTimeout(() => testServerConnection(), 1000);
+        });
+
+        // Toggle Search & Filter collapsible
+        function toggleSearchFilter() {
+            state.searchFilterCollapsed = !state.searchFilterCollapsed;
+            if (state.searchFilterCollapsed) {
+                elements.searchFilterContent.classList.add('collapsed');
+                elements.searchFilterIcon.classList.remove('fa-chevron-down');
+                elements.searchFilterIcon.classList.add('fa-chevron-up');
+            } else {
+                elements.searchFilterContent.classList.remove('collapsed');
+                elements.searchFilterIcon.classList.remove('fa-chevron-up');
+                elements.searchFilterIcon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Connection
+            elements.startConnectionBtn.addEventListener('click', testServerConnection);
+            
+            // File Upload
+            elements.uploadBtn.addEventListener('click', () => {
+                if (!state.serverAvailable) {
+                    showAlert('Please connect to server first', 'warning');
+                    return;
+                }
+                elements.fileInput.click();
+            });
+            
+            elements.fileInput.addEventListener('change', handleFileUpload);
+            
+            // Buttons
+            elements.exportBtn.addEventListener('click', exportCombinedData);
+            elements.refreshBtn.addEventListener('click', loadInitialData);
+            elements.applyFiltersBtn.addEventListener('click', applyAllFilters);
+            elements.clearFiltersBtn.addEventListener('click', clearAllFilters);
+            
+            // Search
+            elements.globalSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') applyAllFilters();
+            });
+            
+            // Fuzzy toggle
+            elements.fuzzyToggle.addEventListener('change', (e) => {
+                state.fuzzySearch = e.target.checked;
+            });
+            
+            // Edit mode toggle
+            elements.editModeToggle.addEventListener('change', (e) => {
+                toggleEditMode();
+            });
+            
+            // Edit buttons
+            elements.saveEditBtn.addEventListener('click', saveAllEdits);
+            elements.cancelEditBtn.addEventListener('click', cancelEditMode);
+            
+            // Delete all datasets
+            elements.deleteAllBtn.addEventListener('click', confirmDeleteAllDatasets);
+            
+            // Pagination
+            elements.prevPageBtn.addEventListener('click', () => {
+                if (state.currentPage > 1) {
+                    state.currentPage--;
+                    updatePagination();
+                    renderTable();
+                }
+            });
+            
+            elements.nextPageBtn.addEventListener('click', () => {
+                if (state.currentPage < state.totalPages) {
+                    state.currentPage++;
+                    updatePagination();
+                    renderTable();
+                }
+            });
+            
+            elements.pageSizeSelect.addEventListener('change', (e) => {
+                state.pageSize = parseInt(e.target.value);
+                state.currentPage = 1;
+                updatePagination();
+                renderTable();
+            });
+            
+            // View mode radio buttons
+            document.querySelectorAll('input[name="viewMode"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    state.viewMode = e.target.value;
+                    updateViewMode();
+                    renderTable();
+                });
+            });
+        }
+
+        // Clear all filters function
+        function clearAllFilters() {
+            console.log('Clearing all filters');
+            
+            // Reset all filter state
+            state.filters = {};
+            state.columnFilters = {};
+            state.searchResults = [];
+            state.filteredData = [...state.combinedData];
+            
+            // Clear UI elements
+            elements.globalSearchInput.value = '';
+            elements.clearFiltersBtn.style.display = 'none';
+            
+            // Clear column filter inputs
+            const filterInputs = document.querySelectorAll('.filter-input');
+            filterInputs.forEach(input => input.value = '');
+            
+            // Update UI
+            applyAllFilters();
+            showAlert('All filters cleared', 'success');
+        }
+
+        // Apply all filters at once (button click)
+        function applyAllFilters() {
+            // Collect all column filter values
+            const filterInputs = document.querySelectorAll('.filter-input[data-column]');
+            state.columnFilters = {};
+            
+            filterInputs.forEach(input => {
+                const column = input.dataset.column;
+                const value = input.value.trim().toLowerCase();
+                if (value) {
+                    state.columnFilters[column] = value;
+                }
+            });
+            
+            // Apply global search if any
+            const globalSearchTerm = elements.globalSearchInput.value.trim();
+            if (globalSearchTerm) {
+                state.filters.globalSearch = globalSearchTerm;
+                handleGlobalSearch();
+            } else {
+                // Just apply column filters
+                applyFilters();
+            }
+            
+            // Show clear filters button
+            elements.clearFiltersBtn.style.display = 'inline-flex';
+        }
+
+        // Test server connection
+        async function testServerConnection() {
+            setLoading(true, 'Testing connection...');
+            
+            try {
+                const ports = [5000, 5001, 8080];
+                let connected = false;
+                let apiBaseUrl = '';
+                
+                for (const port of ports) {
+                    try {
+                        const testUrl = `http://localhost:${port}/api/health`;
+                        console.log(`Testing connection to ${testUrl}`);
+                        
+                        const response = await fetch(testUrl, {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            apiBaseUrl = `http://localhost:${port}/api`;
+                            window.API_BASE_URL = apiBaseUrl;
+                            state.serverAvailable = true;
+                            connected = true;
+                            
+                            elements.connectionStatus.className = 'connection-status status-connected';
+                            elements.connectionStatus.innerHTML = `
+                                <span class="status-dot"></span>
+                                <span>Connected to server (port ${port})</span>
+                            `;
+                            
+                            showAlert(`Connected to server on port ${port}`, 'success');
+                            
+                            // Load data immediately after connection
+                            setTimeout(() => loadInitialData(), 500);
+                            break;
+                        }
+                    } catch (error) {
+                        console.log(`Port ${port} failed:`, error.message);
+                    }
+                }
+                
+                if (!connected) {
+                    throw new Error('Could not connect to server on any port (5000, 5001, 8080)');
+                }
+                
+            } catch (error) {
+                state.serverAvailable = false;
+                elements.connectionStatus.className = 'connection-status status-disconnected';
+                elements.connectionStatus.innerHTML = `
+                    <span class="status-dot"></span>
+                    <span>Disconnected: ${error.message}</span>
+                `;
+                
+                showAlert(`Server connection failed: ${error.message}`, 'error');
+                
+                updateEmptyStateForDisconnection();
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function updateEmptyStateForDisconnection() {
+            elements.emptyState.innerHTML = `
+                <i class="fas fa-plug" style="color: #ef4444;"></i>
+                <h3>Server Connection Required</h3>
+                <p>Please start the Flask server to continue</p>
+                <div style="margin-top: 20px; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <h4>How to start the server:</h4>
+                    <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>Open Command Prompt/Terminal</li>
+                        <li>Navigate to your project folder</li>
+                        <li>Run: <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">python ltts_server.py</code></li>
+                        <li>Wait for "Server starting on http://localhost:5000"</li>
+                        <li>Click "Connect to Server" button below</li>
+                    </ol>
+                </div>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" id="retryConnectionBtn">
+                        <i class="fas fa-redo"></i> Retry Connection
+                    </button>
+                </div>
+            `;
+            document.getElementById('retryConnectionBtn').addEventListener('click', testServerConnection);
+        }
+
+        // API Functions
+        async function fetchDatasets() {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/datasets`);
+                if (!response.ok) throw new Error(`Failed to fetch datasets: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching datasets:', error);
+                showAlert('Error loading datasets: ' + error.message, 'error');
+                return [];
+            }
+        }
+
+        async function fetchCombinedData() {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/combined`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return [];
+                    }
+                    throw new Error(`Failed to fetch combined data: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Failed to parse JSON:', parseError);
+                    return [];
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('Error fetching combined data:', error);
+                showAlert('Error loading data: ' + error.message, 'error');
+                return [];
+            }
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Upload failed');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function deleteDataset(datasetName) {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/dataset/${encodeURIComponent(datasetName)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Delete failed');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function deleteAllDatasets() {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/datasets/delete-all`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Delete all failed');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function searchData(searchTerm) {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        term: searchTerm,
+                        fuzzy: state.fuzzySearch
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Search failed');
+                return await response.json();
+            } catch (error) {
+                console.error('Search error:', error);
+                showAlert('Error performing search', 'error');
+                return [];
+            }
+        }
+
+        async function saveCombinedData(data) {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/combined`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Save failed');
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function updateRow(rowId, updates) {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/update-row`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rowId: rowId,
+                        updates: updates
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Update failed');
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function deleteRowBackend(rowId) {
+            try {
+                const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/delete-row`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rowId: rowId
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Delete failed');
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Data Loading
+        async function loadInitialData() {
+            if (!state.serverAvailable) {
+                showAlert('Please connect to server first', 'warning');
+                return;
+            }
+            
+            setLoading(true, 'Loading data...');
+            
+            try {
+                const [datasets, combinedData] = await Promise.all([
+                    fetchDatasets(),
+                    fetchCombinedData()
+                ]);
+                
+                state.datasets = datasets;
+                state.combinedData = combinedData;
+                state.filteredData = [...combinedData];
+                
+                updateUI();
+                showAlert(`Data loaded: ${combinedData.length} rows, ${datasets.length} datasets`, 'success');
+                
+            } catch (error) {
+                console.error('Error in loadInitialData:', error);
+                showAlert('Error loading data: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // File Operations
+        async function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            
+            setLoading(true, 'Uploading files...');
+            let successCount = 0;
+            
+            for (const file of files) {
+                try {
+                    const result = await uploadFile(file);
+                    successCount++;
+                    showAlert(`Uploaded: ${result.dataset_name} (${result.rows} rows)`, 'success');
+                } catch (error) {
+                    showAlert(`Failed to upload ${file.name}: ${error.message}`, 'error');
+                }
+            }
+            
+            // Refresh data
+            await loadInitialData();
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        async function exportCombinedData() {
+            if (!state.serverAvailable) {
+                showAlert('Please connect to server first', 'warning');
+                return;
+            }
+            
+            if (state.combinedData.length === 0) {
+                showAlert('No data to export', 'warning');
+                return;
+            }
+            
+            try {
+                window.open(`${window.API_BASE_URL || 'http://localhost:5000/api'}/export/combined`, '_blank');
+                showAlert('Export started', 'info');
+            } catch (error) {
+                showAlert('Error exporting data: ' + error.message, 'error');
+            }
+        }
+
+        async function exportDataset(datasetName) {
+            try {
+                window.open(`${window.API_BASE_URL || 'http://localhost:5000/api'}/export/dataset/${encodeURIComponent(datasetName)}`, '_blank');
+                showAlert(`Exporting ${datasetName}`, 'info');
+            } catch (error) {
+                showAlert('Error exporting dataset: ' + error.message, 'error');
+            }
+        }
+
+        async function handleDeleteDataset(datasetName) {
+            if (!confirm(`Are you sure you want to delete dataset "${datasetName}"?`)) return;
+            
+            setLoading(true, 'Deleting dataset...');
+            try {
+                await deleteDataset(datasetName);
+                showAlert(`Dataset "${datasetName}" deleted`, 'success');
+                await loadInitialData();
+            } catch (error) {
+                showAlert(`Error deleting dataset: ${error.message}`, 'error');
+                setLoading(false);
+            }
+        }
+
+        async function confirmDeleteAllDatasets() {
+            if (!confirm('Are you sure you want to delete ALL datasets? This action cannot be undone.')) return;
+            
+            setLoading(true, 'Deleting all datasets...');
+            try {
+                await deleteAllDatasets();
+                showAlert('All datasets deleted', 'success');
+                await loadInitialData();
+            } catch (error) {
+                showAlert('Error deleting datasets: ' + error.message, 'error');
+                setLoading(false);
+            }
+        }
+
+        // Search Functions
+        async function handleGlobalSearch() {
+            const searchTerm = elements.globalSearchInput.value.trim();
+            
+            if (!searchTerm) {
+                return;
+            }
+            
+            setLoading(true, 'Searching...');
+            try {
+                const results = await searchData(searchTerm);
+                state.searchResults = results;
+                state.filters.globalSearch = searchTerm;
+                applyFilters();
+                showAlert(`Found ${results.length} results for "${searchTerm}"`, 'info');
+            } catch (error) {
+                showAlert('Search error: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Filter Functions
+        function createColumnFilters(columns) {
+            elements.columnFilters.innerHTML = '';
+            
+            columns.forEach(column => {
+                if (column === '_source' || column === '_id') return;
+                
+                const filterGroup = document.createElement('div');
+                filterGroup.className = 'filter-group';
+                filterGroup.innerHTML = `
+                    <label class="filter-label">${column}</label>
+                    <input type="text" class="filter-input" 
+                           data-column="${column}"
+                           placeholder="Filter ${column}..."
+                           value="${state.columnFilters[column] || ''}">
+                `;
+                elements.columnFilters.appendChild(filterGroup);
+            });
+            
+            elements.columnFilters.style.display = 'grid';
+        }
+
+        function applyFilters() {
+            console.log('Applying filters...');
+            
+            // Start with all data or search results
+            let data = state.searchResults.length > 0 ? state.searchResults : state.combinedData;
+            
+            // Apply column filters
+            Object.entries(state.columnFilters).forEach(([column, filterValue]) => {
+                data = data.filter(row => {
+                    const cellValue = String(row[column] || '').toLowerCase();
+                    return cellValue.includes(filterValue);
+                });
+            });
+            
+            state.filteredData = data;
+            state.currentPage = 1;
+            
+            updateViewMode();
+            renderTable();
+            updateStats();
+        }
+
+        // Edit Functions
+        function toggleEditMode() {
+            state.editMode = elements.editModeToggle.checked;
+            
+            if (state.editMode) {
+                elements.editModeButtons.style.display = 'flex';
+                showAlert('Edit mode enabled. You can now edit individual cells.', 'info');
+            } else {
+                elements.editModeButtons.style.display = 'none';
+                state.editingRow = null;
+                showAlert('Edit mode disabled', 'info');
+            }
+            
+            renderTable();
+        }
+
+        function enableRowEdit(rowIndex) {
+            state.editingRow = rowIndex;
+            renderTable();
+        }
+
+        async function saveRowEdit(rowIndex) {
+            const rowElement = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
+            if (!rowElement) return;
+            
+            const inputs = rowElement.querySelectorAll('.edit-input');
+            const rowId = state.filteredData[rowIndex]._id;
+            const updatedRow = { ...state.filteredData[rowIndex] };
+            const updates = {};
+            
+            inputs.forEach(input => {
+                const column = input.dataset.column;
+                const newValue = input.value || null;
+                updatedRow[column] = newValue;
+                updates[column] = newValue;
+            });
+            
+            setLoading(true, 'Saving changes...');
+            try {
+                await updateRow(rowId, updates);
+                
+                // Update local state
+                state.filteredData[rowIndex] = updatedRow;
+                
+                // Update in combined data
+                const combinedIndex = state.combinedData.findIndex(row => row._id === rowId);
+                if (combinedIndex !== -1) {
+                    state.combinedData[combinedIndex] = updatedRow;
+                }
+                
+                state.editingRow = null;
+                showAlert('Row updated successfully', 'success');
+            } catch (error) {
+                showAlert('Error saving row: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+                renderTable();
+            }
+        }
+
+        function cancelRowEdit() {
+            state.editingRow = null;
+            renderTable();
+        }
+
+        async function saveAllEdits() {
+            setLoading(true, 'Saving all changes...');
+            try {
+                await saveCombinedData(state.combinedData);
+                showAlert('All changes saved successfully', 'success');
+                toggleEditMode();
+            } catch (error) {
+                showAlert('Error saving changes: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function cancelEditMode() {
+            loadInitialData();
+            elements.editModeToggle.checked = false;
+            toggleEditMode();
+        }
+
+        async function deleteRow(rowIndex) {
+            if (!confirm('Are you sure you want to delete this row?')) return;
+            
+            const rowToDelete = state.filteredData[rowIndex];
+            const rowId = rowToDelete._id;
+            
+            setLoading(true, 'Deleting row...');
+            try {
+                await deleteRowBackend(rowId);
+                
+                // Update local state
+                state.filteredData.splice(rowIndex, 1);
+                
+                const combinedIndex = state.combinedData.findIndex(row => row._id === rowId);
+                if (combinedIndex !== -1) {
+                    state.combinedData.splice(combinedIndex, 1);
+                }
+                
+                showAlert('Row deleted successfully', 'success');
+                updateViewMode();
+                renderTable();
+                updateStats();
+            } catch (error) {
+                showAlert('Error deleting row: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Sorting
+        function sortTable(column) {
+            if (state.sortColumn === column) {
+                state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.sortColumn = column;
+                state.sortDirection = 'asc';
+            }
+            
+            state.filteredData.sort((a, b) => {
+                const valA = a[column] || '';
+                const valB = b[column] || '';
+                
+                if (valA < valB) return state.sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return state.sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            state.currentPage = 1;
+            updatePagination();
+            renderTable();
+        }
+
+        // View Mode
+        function updateViewMode() {
+            if (state.viewMode === 'all') {
+                elements.paginationControls.style.display = 'none';
+                state.displayedData = [...state.filteredData];
+            } else {
+                elements.paginationControls.style.display = 'flex';
+                updatePagination();
+            }
+            
+            elements.rowCount.textContent = `Showing ${state.displayedData.length} rows`;
+        }
+
+        // Pagination
+        function updatePagination() {
+            state.totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.pageSize));
+            
+            elements.prevPageBtn.disabled = state.currentPage <= 1;
+            elements.nextPageBtn.disabled = state.currentPage >= state.totalPages;
+            elements.pageInfo.textContent = `Page ${state.currentPage} of ${state.totalPages}`;
+            
+            const startIndex = (state.currentPage - 1) * state.pageSize;
+            const endIndex = startIndex + state.pageSize;
+            state.displayedData = state.filteredData.slice(startIndex, endIndex);
+            
+            elements.rowCount.textContent = `Showing ${state.displayedData.length} rows (${state.filteredData.length} total)`;
+        }
+
+        // UI Rendering
+        function updateUI() {
+            const hasData = state.combinedData.length > 0;
+            
+            if (hasData) {
+                elements.emptyState.style.display = 'none';
+                elements.tableContainer.style.display = 'block';
+                elements.statsSection.style.display = 'flex';
+                elements.datasetsSection.style.display = 'block';
+                elements.deleteAllBtn.style.display = state.datasets.length > 0 ? 'inline-flex' : 'none';
+                
+                const columns = state.combinedData.length > 0 ? 
+                    Object.keys(state.combinedData[0]).filter(col => !['_source', '_id'].includes(col)) : [];
+                
+                createColumnFilters(columns);
+                updateStats();
+                updateDatasetsList();
+                updateViewMode();
+                applyFilters();
+            } else {
+                elements.emptyState.style.display = 'block';
+                elements.tableContainer.style.display = 'none';
+                elements.statsSection.style.display = 'none';
+                elements.datasetsSection.style.display = 'none';
+                elements.deleteAllBtn.style.display = 'none';
+                
+                if (state.serverAvailable) {
+                    elements.emptyState.innerHTML = `
+                        <i class="fas fa-database"></i>
+                        <h3>No Data Available</h3>
+                        <p>Upload your first dataset to get started</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()" style="margin-top: 20px;">
+                            <i class="fas fa-upload"></i> Upload Dataset
+                        </button>
+                    `;
+                }
+            }
+        }
+
+        function updateStats() {
+            elements.totalRows.textContent = state.combinedData.length;
+            
+            const columns = new Set();
+            state.combinedData.forEach(row => {
+                Object.keys(row).forEach(col => {
+                    if (!['_source', '_id'].includes(col)) columns.add(col);
+                });
+            });
+            elements.totalColumns.textContent = columns.size;
+            
+            elements.totalDatasets.textContent = state.datasets.length;
+            elements.filteredRows.textContent = state.filteredData.length;
+            
+            if (state.searchResults.length > 0) {
+                elements.tableTitle.textContent = `Search Results (${state.filteredData.length} rows)`;
+                elements.searchInfo.style.display = 'block';
+                elements.searchResultsCount.textContent = state.filteredData.length;
+            } else if (Object.keys(state.columnFilters).length > 0) {
+                elements.tableTitle.textContent = `Filtered Data (${state.filteredData.length} rows)`;
+                elements.searchInfo.style.display = 'none';
+            } else {
+                elements.tableTitle.textContent = `Combined Database (${state.combinedData.length} rows)`;
+                elements.searchInfo.style.display = 'none';
+            }
+        }
+
+        function updateDatasetsList() {
+            elements.datasetsList.innerHTML = '';
+            
+            if (state.datasets.length === 0) {
+                elements.datasetsList.innerHTML = '<p style="color: #6b7280; font-style: italic;">No datasets loaded</p>';
+                return;
+            }
+            
+            state.datasets.forEach(dataset => {
+                const div = document.createElement('div');
+                div.className = 'dataset-tag';
+                div.innerHTML = `
+                    <span>${dataset.name} (${dataset.rows} rows)</span>
+                    <div>
+                        <button onclick="exportDataset('${dataset.name}')" title="Export dataset" style="color: #3b82f6;">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button onclick="handleDeleteDataset('${dataset.name}')" title="Delete dataset">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                elements.datasetsList.appendChild(div);
+            });
+        }
+
+        // Render Table (simplified - no column search boxes)
+        function renderTable() {
+            if (state.filteredData.length === 0) {
+                elements.tableWrapper.innerHTML = `
+                    <div class="empty-state" style="padding: 40px 20px; background: transparent; box-shadow: none;">
+                        <i class="fas fa-search" style="font-size: 48px;"></i>
+                        <h3>No Data Found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get all unique columns from displayed data
+            const columns = new Set();
+            state.displayedData.forEach(row => {
+                if (row) {
+                    Object.keys(row).forEach(col => {
+                        if (!['_source', '_id'].includes(col)) columns.add(col);
+                    });
+                }
+            });
+            
+            const columnArray = Array.from(columns);
+            
+            let html = '<table>';
+            
+            // Header (simple - no search icons)
+            html += '<thead><tr>';
+            html += '<th class="actions-cell">Actions</th>';
+            
+            columnArray.forEach(col => {
+                html += `<th onclick="sortTable('${col}')" style="cursor: pointer;">
+                    ${col}
+                </th>`;
+            });
+            
+            html += '<th>Source</th>';
+            html += '</tr></thead>';
+            
+            // Body
+            html += '<tbody>';
+            
+            state.displayedData.forEach((row, rowIndex) => {
+                if (!row) return;
+                
+                const absoluteIndex = rowIndex;
+                const isEditing = state.editingRow === absoluteIndex;
+                const rowId = row._id || '';
+                
+                html += `<tr data-row-index="${absoluteIndex}" data-row-id="${rowId}">`;
+                
+                // Actions cell
+                html += `<td class="actions-cell">`;
+                
+                if (state.editMode) {
+                    if (isEditing) {
+                        html += `
+                            <div class="action-buttons">
+                                <button class="action-btn save-btn" onclick="saveRowEdit(${absoluteIndex})" title="Save">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="action-btn cancel-btn" onclick="cancelRowEdit()" title="Cancel">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="action-buttons">
+                                <button class="action-btn edit-btn" onclick="enableRowEdit(${absoluteIndex})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteRow(${absoluteIndex})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    html += `
+                        <div class="action-buttons">
+                            <button class="action-btn delete-btn" onclick="deleteRow(${absoluteIndex})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                html += `</td>`;
+                
+                // Data cells
+                columnArray.forEach(col => {
+                    const cellValue = row[col];
+                    
+                    if (isEditing) {
+                        html += `<td>
+                            <input type="text" class="edit-input" 
+                                   data-column="${col}"
+                                   value="${cellValue !== null && cellValue !== undefined ? cellValue : ''}">
+                        </td>`;
+                    } else {
+                        const displayValue = cellValue !== null && cellValue !== undefined ? 
+                            cellValue : '<span class="null-value">NULL</span>';
+                        html += `<td>${displayValue}</td>`;
+                    }
+                });
+                
+                // Source column
+                html += `<td>${row._source || ''}</td>`;
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            elements.tableWrapper.innerHTML = html;
+        }
+
+        // Utility Functions
+        function setLoading(isLoading, message = '') {
+            state.isLoading = isLoading;
+            
+            if (isLoading) {
+                elements.refreshBtn.innerHTML = message ? 
+                    `<span class="loading"></span> ${message}` : 
+                    '<span class="loading"></span> Loading...';
+                elements.refreshBtn.disabled = true;
+            } else {
+                elements.refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+                elements.refreshBtn.disabled = false;
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            elements.alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (alert.parentNode) {
+                            alert.parentNode.removeChild(alert);
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Make functions available globally
+        window.sortTable = sortTable;
+        window.enableRowEdit = enableRowEdit;
+        window.saveRowEdit = saveRowEdit;
+        window.cancelRowEdit = cancelRowEdit;
+        window.deleteRow = deleteRow;
+        window.handleDeleteDataset = handleDeleteDataset;
+        window.exportDataset = exportDataset;
+        window.toggleSearchFilter = toggleSearchFilter;
+    </script>
+</body>
+</html>

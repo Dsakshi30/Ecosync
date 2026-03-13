@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSync</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/charts.css"> <!-- NEW: Charts CSS -->
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="public/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <img src="./public/LTTS.png" alt="L&T Logo" class="logo">
+                <div class="header-text">
+                    <h1>EcoSync</h1>
+                </div>
+            </div>
+            <p>Syncing OEM, partner, and customer data</p>
+            <div id="connectionStatus" class="connection-status status-disconnected">
+                <span class="status-dot"></span>
+                <span>Disconnected from server</span>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats" id="statsSection" style="display: none;">
+            <div class="stat-card">
+                <h4>Total Rows</h4>
+                <div class="value" id="totalRows">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Total Columns</h4>
+                <div class="value" id="totalColumns">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Datasets</h4>
+                <div class="value" id="totalDatasets">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Filtered Rows</h4>
+                <div class="value" id="filteredRows">0</div>
+            </div>
+        </div>
+        
+        <!-- Visualizations Section - NEW -->
+        <div class="charts-section" id="chartsSection" style="display: none;">
+            <h3><i class="fas fa-chart-bar"></i> Data Visualizations</h3>
+            <div class="charts-grid" id="chartsGrid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-globe-americas"></i> Company Headquarters Distribution</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn active" data-chart-type="bar" onclick="Visualizations.changeChartType('hqChart', 'bar')">
+                                <i class="fas fa-chart-bar"></i> Bar
+                            </button>
+                            <button class="chart-btn" data-chart-type="pie" onclick="Visualizations.changeChartType('hqChart', 'pie')">
+                                <i class="fas fa-chart-pie"></i> Pie
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="hqChart"></canvas>
+                        <div class="chart-loading" id="hqChartLoading" style="display: none;">
+                            <div class="loading"></div>
+                            <span>Processing data...</span>
+                        </div>
+                        <div class="no-chart-data" id="hqChartNoData" style="display: none;">
+                            <i class="fas fa-globe"></i>
+                            <p>No HQ data available</p>
+                        </div>
+                    </div>
+                    <div class="chart-stats" id="hqChartStats"></div>
+                    <div class="chart-legend" id="hqChartLegend"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Datasets List -->
+        <div class="datasets-section" id="datasetsSection" style="display: none;">
+            <div class="control-group">
+                <h3 onclick="UI.toggleDatasetsSection()">
+                    <i class="fas fa-layer-group"></i> Loaded Datasets
+                    <i class="fas fa-chevron-down" id="datasetsChevronIcon"></i>
+                </h3>
+                <div class="collapsible-content" id="datasetsContent">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <button class="btn btn-danger" id="deleteAllBtn" style="display: none;">
+                            <i class="fas fa-trash-alt"></i> Delete All Datasets
+                        </button>
+                    </div>
+                    <div class="datasets-list" id="datasetsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <h3><i class="fas fa-folder-open"></i> Data Management</h3>
+                <div class="buttons">
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Upload Dataset
+                        </button>
+                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple>
+                    </div>
+                    <button class="btn btn-success" id="exportBtn">
+                        <i class="fas fa-download"></i> Export Combined Data
+                    </button>
+                    <button class="btn btn-info" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search and Filter (Collapsible) -->
+            <div class="control-group" id="searchFilterGroup">
+                <h3 onclick="UI.toggleSearchFilter()">
+                    <i class="fas fa-search"></i> Search & Filter
+                    <i class="fas fa-chevron-up" id="searchFilterIcon"></i>
+                </h3>
+
+                <div class="collapsible-content collapsed" id="searchFilterContent">
+                    <!-- Fuzzy Search Toggle -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="toggle-switch">
+                            <span class="toggle-label">Fuzzy Search</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="fuzzyToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Global Search -->
+                    <div class="search-container">
+                        <input type="text" id="globalSearchInput" class="search-input" 
+                               placeholder="Search across all columns...">
+                    </div>
+                    
+                    <!-- Column Filters -->
+                    <div id="columnFilters" class="column-filters" style="display: none;"></div>
+                    
+                    <!-- Filter Control Buttons -->
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-success" id="applyFiltersBtn">
+                            <i class="fas fa-filter"></i> Apply All Filters
+                        </button>
+                        <button class="btn btn-danger" id="clearFiltersBtn" style="display: none;">
+                            <i class="fas fa-filter-circle-xmark"></i> Clear All Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3><i class="fas fa-edit"></i> Edit Options</h3>
+                <div class="edit-mode-switch">
+                    <span class="edit-mode-label">Enable Edit Mode</span>
+                    <label class="edit-toggle">
+                        <input type="checkbox" id="editModeToggle">
+                        <span class="edit-slider"></span>
+                    </label>
+                </div>
+                <div class="buttons" style="margin-top: 10px; display: none;" id="editModeButtons">
+                    <button class="btn btn-success" id="saveEditBtn">
+                        <i class="fas fa-save"></i> Save All Changes
+                    </button>
+                    <button class="btn btn-danger" id="cancelEditBtn">
+                        <i class="fas fa-times"></i> Cancel Edit
+                    </button>
+                </div>
+            </div>
+            
+            <!-- View Options -->
+            <div class="control-group">
+                <h3><i class="fas fa-eye"></i> View Options</h3>
+                <div class="view-options">
+                    <label>
+                        <input type="radio" name="viewMode" value="all"> Show All Data (No Pagination)
+                    </label>
+                    <label>
+                        <input type="radio" name="viewMode" value="paged" checked> Enable Pagination
+                    </label>
+                    <div class="row-count" id="rowCount">Showing 0 rows</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <div class="table-header">
+                <h2 id="tableTitle">Combined Database</h2>
+                <div class="table-actions">
+                    <div id="searchInfo" style="display: none;">
+                        <span id="searchResultsCount">0</span> results found
+                    </div>
+                    <div class="pagination" id="paginationControls">
+                        <button class="btn btn-sm" id="prevPageBtn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span id="pageInfo">Page 1 of 1</span>
+                        <button class="btn btn-sm" id="nextPageBtn" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <select id="pageSizeSelect" class="filter-input">
+                            <option value="10">10 rows</option>
+                            <option value="25" selected>25 rows</option>
+                            <option value="50">50 rows</option>
+                            <option value="100">100 rows</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="tableWrapper"></div>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-database"></i>
+            <h3>Welcome to EcoSync</h3>
+            <p>Connect to the server and upload your first dataset to get started</p>
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-primary" id="startConnectionBtn">
+                    <i class="fas fa-plug"></i> Connect to Server
+                </button>
+                <div style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+                    <p>Make sure your Flask server is running on http://localhost:5000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+
+    <!-- JavaScript Modules -->
+    <script src="js/state.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/chart-utils.js"></script>    <!-- NEW: Chart utilities -->
+    <script src="js/visualizations.js"></script>  <!-- NEW: Visualizations module -->
+    <script src="js/ui.js"></script>
+    <script src="js/search-filter.js"></script>
+    <script src="js/edit-mode.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

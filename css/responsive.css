@@ -1,0 +1,81 @@
+/* === RESPONSIVE STYLES === */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header, .controls, .table-container, .datasets-section {
+        padding: 20px;
+    }
+    
+    .buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .search-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    th, td {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .stats {
+        flex-direction: column;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .column-filters {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .row-count {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .project-name {
+        font-size: 16px;
+    }
+    
+    .header p {
+        font-size: 14px;
+    }
+    
+    .stat-card {
+        min-width: 100%;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .alert {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+}
