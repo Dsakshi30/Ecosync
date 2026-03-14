@@ -1034,6 +1034,10 @@ def test_api():
         'timestamp': datetime.now().isoformat()
     })
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
 if __name__ == '__main__':
     print("=" * 70)
     print("LTTS FETCHER - BACKEND SERVER (COMPLETE EDITION/DELETE SUPPORT)")
